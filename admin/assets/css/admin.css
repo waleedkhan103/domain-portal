@@ -1,0 +1,29 @@
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  background: #f4f6f8;
+  margin: 0;
+  padding: 0;
+}
+.admin-nav {
+  background: #222;
+  color: #fff;
+  padding: 10px;
+}
+.admin-nav a {
+  color: #fff;
+  text-decoration: none;
+  margin-right: 8px;
+}
+.admin-main {
+  padding: 20px;
+}
+.admin-login {
+  max-width: 360px;
+  margin: 60px auto;
+  padding: 20px;
+  background: #fff;
+  border: 1px solid #ddd;
+}
+.admin-login .error {
+  color: #b00020;
+}

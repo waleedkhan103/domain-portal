@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CSS Test - Multiple Path Attempts</title>
+    
+    <!-- Try Path 1: /misc/waleed/domain-portal/assets/css/style.css (CORRECT) -->
+    <link rel="stylesheet" href="/misc/waleed/domain-portal/assets/css/style.css" id="css1">
+    
+    <!-- Try Path 2: ./assets/css/style.css (relative) -->
+    <link rel="stylesheet" href="./assets/css/style.css" id="css2">
+    
+    <!-- Try Path 3: assets/css/style.css (relative) -->
+    <link rel="stylesheet" href="assets/css/style.css" id="css3">
+    
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .test-section { background: white; padding: 20px; margin: 20px 0; border-radius: 5px; }
+        .test-section h3 { margin-top: 0; color: #333; }
+        .path { background: #f0f0f0; padding: 10px; border-radius: 3px; margin: 5px 0; font-family: monospace; }
+        .success { color: green; font-weight: bold; }
+        .fail { color: red; font-weight: bold; }
+        .button-test button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🔍 CSS Loading Diagnostic</h1>
+    
+    <div class="test-section">
+        <h3>CSS Paths Being Tested:</h3>
+        <div class="path">/misc/waleed/domain-portal/assets/css/style.css (CORRECT)</div>
+        <div class="path">./assets/css/style.css (relative)</div>
+        <div class="path">assets/css/style.css (relative)</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Button Styling Test</h3>
+        <div class="button-test">
+            <button class="btn-primary">Primary Button</button>
+            <button class="btn-secondary">Secondary Button</button>
+        </div>
+        <p id="button-result">✓ If buttons above are styled (colored background), CSS is loaded!</p>
+    </div>
+    
+    <div class="test-section">
+        <h3>Hero Section Test</h3>
+        <section class="hero">
+            <h2>This should have a purple gradient background if CSS is loaded</h2>
+        </section>
+        <p id="hero-result">Check the hero section above ☝</p>
+    </div>
+    
+    <div class="test-section">
+        <h3>Alert Test</h3>
+        <div class="alert alert-success">✓ Success Message (should be green)</div>
+        <div class="alert alert-error">✗ Error Message (should be red)</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Debug Info</h3>
+        <p><strong>Current URL:</strong> <span id="current-url"></span></p>
+        <p><strong>Current Path:</strong> <span id="current-path"></span></p>
+        <p id="css-status"></p>
+    </div>
+    
+    <script>
+        document.getElementById('current-url').textContent = window.location.href;
+        document.getElementById('current-path').textContent = window.location.pathname;
+        
+        // Check which CSS loaded
+        setTimeout(function() {
+            const btn = document.querySelector('.btn-primary');
+            if (btn) {
+                const style = window.getComputedStyle(btn);
+                const bgColor = style.backgroundColor;
+                const hasStyle = bgColor && bgColor !== 'rgba(0, 0, 0, 0)' && bgColor !== 'transparent';
+                
+                const statusDiv = document.getElementById('css-status');
+                if (hasStyle) {
+                    statusDiv.innerHTML = '<span class="success">✓ CSS IS LOADING!</span> Button background color: ' + bgColor;
+                } else {
+                    statusDiv.innerHTML = '<span class="fail">✗ CSS NOT LOADED</span> Button has no background color';
+                }
+                
+                const hero = document.querySelector('.hero');
+                if (hero) {
+                    const heroStyle = window.getComputedStyle(hero);
+                    console.log('Hero computed styles:', {
+                        background: heroStyle.background,
+                        backgroundColor: heroStyle.backgroundColor,
+                        backgroundImage: heroStyle.backgroundImage
+                    });
+                }
+            }
+        }, 500);
+        
+        // Log to console
+        console.log('Testing CSS paths...');
+        console.log('Current location:', window.location.href);
+        console.log('Pathname:', window.location.pathname);
+    </script>
+</body>
+</html>
+    
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .test-section { background: white; padding: 20px; margin: 20px 0; border-radius: 5px; }
+        .test-section h3 { margin-top: 0; color: #333; }
+        .path { background: #f0f0f0; padding: 10px; border-radius: 3px; margin: 5px 0; font-family: monospace; }
+        .success { color: green; font-weight: bold; }
+        .fail { color: red; font-weight: bold; }
+        .button-test button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🔍 CSS Loading Diagnostic</h1>
+    
+    <div class="test-section">
+        <h3>CSS Paths Being Tested:</h3>
+        <div class="path">/domain-portal/assets/css/style.css</div>
+        <div class="path">/assets/css/style.css</div>
+        <div class="path">./assets/css/style.css</div>
+        <div class="path">assets/css/style.css</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Button Styling Test</h3>
+        <div class="button-test">
+            <button class="btn-primary">Primary Button</button>
+            <button class="btn-secondary">Secondary Button</button>
+        </div>
+        <p id="button-result">✓ If buttons above are styled (colored background), CSS is loaded!</p>
+    </div>
+    
+    <div class="test-section">
+        <h3>Hero Section Test</h3>
+        <section class="hero">
+            <h2>This should have a purple gradient background if CSS is loaded</h2>
+        </section>
+        <p id="hero-result">Check the hero section above ☝</p>
+    </div>
+    
+    <div class="test-section">
+        <h3>Alert Test</h3>
+        <div class="alert alert-success">✓ Success Message (should be green)</div>
+        <div class="alert alert-error">✗ Error Message (should be red)</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Debug Info</h3>
+        <p><strong>Current URL:</strong> <span id="current-url"></span></p>
+        <p><strong>Current Path:</strong> <span id="current-path"></span></p>
+        <p id="css-status"></p>
+    </div>
+    
+    <script>
+        document.getElementById('current-url').textContent = window.location.href;
+        document.getElementById('current-path').textContent = window.location.pathname;
+        
+        // Check which CSS loaded
+        setTimeout(function() {
+            const btn = document.querySelector('.btn-primary');
+            if (btn) {
+                const style = window.getComputedStyle(btn);
+                const bgColor = style.backgroundColor;
+                const hasStyle = bgColor && bgColor !== 'rgba(0, 0, 0, 0)' && bgColor !== 'transparent';
+                
+                const statusDiv = document.getElementById('css-status');
+                if (hasStyle) {
+                    statusDiv.innerHTML = '<span class="success">✓ CSS IS LOADING!</span> Button background color: ' + bgColor;
+                } else {
+                    statusDiv.innerHTML = '<span class="fail">✗ CSS NOT LOADED</span> Button has no background color';
+                }
+                
+                const hero = document.querySelector('.hero');
+                if (hero) {
+                    const heroStyle = window.getComputedStyle(hero);
+                    console.log('Hero computed styles:', {
+                        background: heroStyle.background,
+                        backgroundColor: heroStyle.backgroundColor,
+                        backgroundImage: heroStyle.backgroundImage
+                    });
+                }
+            }
+        }, 500);
+        
+        // Log to console
+        console.log('Testing CSS paths...');
+        console.log('Current location:', window.location.href);
+        console.log('Pathname:', window.location.pathname);
+    </script>
+</body>
+</html>
