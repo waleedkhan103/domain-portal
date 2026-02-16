@@ -35,9 +35,22 @@ if ($id) {
   $fields[] = 'email = ?';
   $types .= 's';
   $params[] = $email;
-  $fields[] = 'username = ?';
-  $types .= 's';
-  $params[] = $username;
+  // only include username if column exists
+  $colsRes = mysqli_query($conn, "SHOW COLUMNS FROM users");
+  $hasUsername = false;
+  if ($colsRes) {
+    while ($c = mysqli_fetch_assoc($colsRes)) {
+      if ($c['Field'] === 'username') {
+        $hasUsername = true;
+        break;
+      }
+    }
+  }
+  if ($hasUsername) {
+    $fields[] = 'username = ?';
+    $types .= 's';
+    $params[] = $username;
+  }
   $fields[] = 'is_admin = ?';
   $types .= 'i';
   $params[] = $isAdmin;
@@ -64,14 +77,38 @@ if ($id) {
   if (!$password)
     jsonResponse(false, 'Password required for new user');
   $hash = password_hash($password, PASSWORD_DEFAULT);
-  $sql = "INSERT INTO users (email, username, password_hash, is_admin, created_at) VALUES (?, ?, ?, ?, NOW())";
-  if ($stmt = $conn->prepare($sql)) {
-    $stmt->bind_param('sssi', $email, $username, $hash, $isAdmin);
-    $stmt->execute();
-    $newId = $stmt->insert_id;
-    $stmt->close();
-    jsonResponse(true, 'User created', ['id' => $newId]);
+  // only include username column if available
+  $colsRes = mysqli_query($conn, "SHOW COLUMNS FROM users");
+  $hasUsername = false;
+  if ($colsRes) {
+    while ($c = mysqli_fetch_assoc($colsRes)) {
+      if ($c['Field'] === 'username') {
+        $hasUsername = true;
+        break;
+      }
+    }
+  }
+  if ($hasUsername) {
+    $sql = "INSERT INTO users (email, username, password_hash, is_admin, created_at) VALUES (?, ?, ?, ?, NOW())";
+    if ($stmt = $conn->prepare($sql)) {
+      $stmt->bind_param('sssi', $email, $username, $hash, $isAdmin);
+      $stmt->execute();
+      $newId = $stmt->insert_id;
+      $stmt->close();
+      jsonResponse(true, 'User created', ['id' => $newId]);
+    } else {
+      jsonResponse(false, 'DB error');
+    }
   } else {
-    jsonResponse(false, 'DB error');
+    $sql = "INSERT INTO users (email, password_hash, is_admin, created_at) VALUES (?, ?, ?, NOW())";
+    if ($stmt = $conn->prepare($sql)) {
+      $stmt->bind_param('ssi', $email, $hash, $isAdmin);
+      $stmt->execute();
+      $newId = $stmt->insert_id;
+      $stmt->close();
+      jsonResponse(true, 'User created', ['id' => $newId]);
+    } else {
+      jsonResponse(false, 'DB error');
+    }
   }
 }

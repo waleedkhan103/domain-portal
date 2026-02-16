@@ -14,14 +14,44 @@ if (!$id) {
 }
 
 $user = null;
-if ($stmt = $conn->prepare("SELECT id,email,first_name,last_name,username,phone,country,created_at,status,is_admin FROM users WHERE id = ? LIMIT 1")) {
+// build select based on existing columns
+$availableCols = [];
+$colsRes = mysqli_query($conn, "SHOW COLUMNS FROM users");
+if ($colsRes) {
+  while ($col = mysqli_fetch_assoc($colsRes)) {
+    $availableCols[$col['Field']] = true;
+  }
+}
+
+$selectFields = ['id'];
+if (!empty($availableCols['email']))
+  $selectFields[] = 'email';
+if (!empty($availableCols['first_name']))
+  $selectFields[] = 'first_name';
+if (!empty($availableCols['last_name']))
+  $selectFields[] = 'last_name';
+if (!empty($availableCols['username']))
+  $selectFields[] = 'username';
+if (!empty($availableCols['phone']))
+  $selectFields[] = 'phone';
+if (!empty($availableCols['country']))
+  $selectFields[] = 'country';
+if (!empty($availableCols['created_at']))
+  $selectFields[] = 'created_at';
+if (!empty($availableCols['status']))
+  $selectFields[] = 'status';
+if (!empty($availableCols['is_admin']))
+  $selectFields[] = 'is_admin';
+
+$sqlUser = "SELECT " . implode(',', $selectFields) . " FROM users WHERE id = ? LIMIT 1";
+if ($stmt = $conn->prepare($sqlUser)) {
   $stmt->bind_param('i', $id);
   $stmt->execute();
   $r = $stmt->get_result();
-  $user = $r->fetch_assoc();
+  $user = $r ? $r->fetch_assoc() : null;
   $stmt->close();
 } else {
-  $r = mysqli_query($conn, "SELECT id,email,first_name,last_name,username,phone,country,created_at,status,is_admin FROM users WHERE id = $id LIMIT 1");
+  $r = mysqli_query($conn, "SELECT " . implode(',', $selectFields) . " FROM users WHERE id = $id LIMIT 1");
   $user = $r ? mysqli_fetch_assoc($r) : null;
 }
 
