@@ -152,11 +152,3 @@ if (!$conn) {
 <script src="<?php echo BASE_PATH; ?>/admin/assets/js/dashboard.js" defer></script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
-<?php
-$pageTitle = 'Admin Dashboard';
-require_once __DIR__ . '/includes/header.php';
-?>
-<h1>Dashboard</h1>
-<p>Welcome, Admin.</p>
-
-<?php require_once __DIR__ . '/includes/footer.php'; ?>

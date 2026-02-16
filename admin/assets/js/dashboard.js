@@ -25,14 +25,32 @@ document.addEventListener("DOMContentLoaded", function () {
   async function fetchData() {
     try {
       const res = await fetch(dataUrl, { credentials: "same-origin" });
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
       const j = await res.json();
       if (!j.success) {
-        console.error(j);
+        console.error("API Error:", j);
+        showError(j.message || "Failed to load dashboard data");
         return;
       }
       renderData(j.data);
     } catch (err) {
-      console.error(err);
+      console.error("Fetch Error:", err);
+      showError(
+        "Unable to load dashboard data. Please check your database configuration or try refreshing the page.",
+      );
+    }
+  }
+
+  function showError(msg) {
+    // Show alert at top of metrics
+    const metricsRow = document.getElementById("metrics-row");
+    const alert = document.createElement("div");
+    alert.className = "alert alert-danger";
+    alert.innerHTML = "<strong>Error:</strong> " + msg;
+    if (metricsRow) {
+      metricsRow.parentNode.insertBefore(alert, metricsRow);
     }
   }
 
