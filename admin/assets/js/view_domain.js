@@ -9,6 +9,20 @@ document.addEventListener("DOMContentLoaded", function () {
     ? document.getElementById("domain-id").value
     : null;
 
+  // CSRF token — refreshed after each action so single-use tokens stay valid
+  let domainCsrfToken = document.querySelector('input[name="csrf_token"]')
+    ? document.querySelector('input[name="csrf_token"]').value
+    : "";
+
+  function refreshCsrfToken(newToken) {
+    if (!newToken) return;
+    domainCsrfToken = newToken;
+    // keep all hidden CSRF inputs in sync so FormData from forms also stays fresh
+    document.querySelectorAll('input[name="csrf_token"]').forEach(function (el) {
+      el.value = newToken;
+    });
+  }
+
   function showToast(message, success = true) {
     if (!toastArea) return;
     const el = document.createElement("div");
@@ -38,13 +52,11 @@ document.addEventListener("DOMContentLoaded", function () {
       lockBtn.disabled = true;
       const form = new FormData();
       form.append("domain_id", domainId);
-      form.append(
-        "csrf_token",
-        document.querySelector('input[name="csrf_token"]').value,
-      );
+      form.append("csrf_token", domainCsrfToken);
       const json = await postJSON("api/toggle_domain_lock.php", form);
       lockBtn.disabled = false;
       if (json.success) {
+        refreshCsrfToken(json.data && json.data.csrf_token);
         const badge = document.getElementById("domain-lock-badge");
         if (badge)
           badge.textContent =
@@ -62,13 +74,11 @@ document.addEventListener("DOMContentLoaded", function () {
       authBtn.disabled = true;
       const form = new FormData();
       form.append("domain_id", domainId);
-      form.append(
-        "csrf_token",
-        document.querySelector('input[name="csrf_token"]').value,
-      );
+      form.append("csrf_token", domainCsrfToken);
       const json = await postJSON("api/get_auth_code.php", form);
       authBtn.disabled = false;
       if (json.success) {
+        refreshCsrfToken(json.data && json.data.csrf_token);
         const code = json.data.auth_code || json.data;
         // show modal
         const modal = document.getElementById("auth-modal");
@@ -106,13 +116,11 @@ document.addEventListener("DOMContentLoaded", function () {
       const form = new FormData();
       form.append("domain_id", domainId);
       form.append("period", n);
-      form.append(
-        "csrf_token",
-        document.querySelector('input[name="csrf_token"]').value,
-      );
+      form.append("csrf_token", domainCsrfToken);
       const json = await postJSON("api/renew_domain.php", form);
       renewBtn.disabled = false;
       if (json.success) {
+        refreshCsrfToken(json.data && json.data.csrf_token);
         showToast("Domain renewed");
         // update expiry display
         const expEl = document.getElementById("domain-expires");
@@ -135,6 +143,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const json = await postJSON("api/update_contacts.php", fd);
       if (btn) btn.disabled = false;
       if (json.success) {
+        refreshCsrfToken(json.data && json.data.csrf_token);
         showToast("Contacts updated");
         loadActivity();
       } else {

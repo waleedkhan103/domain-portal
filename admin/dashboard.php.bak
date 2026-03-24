@@ -1,9 +1,0 @@
-<?php
-$pageTitle = 'Admin - Dashboard';
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/includes/header.php';
-
-global $conn;
-if (!$conn) {
-  echo '<div class="alert alert-warning">Database unavailable. Please check configuration.</div>';
-  require_once __DIR__ . '/includes/footer.php';

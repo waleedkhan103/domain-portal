@@ -1,11 +1,8 @@
 <?php
-if (session_status() !== PHP_SESSION_ACTIVE)
+if (session_status() === PHP_SESSION_NONE)
   session_start();
 header('Content-Type: application/json; charset=utf-8');
-// enable errors for debugging API
-ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
-error_reporting(E_ALL);
+ini_set('display_errors', '0'); // never leak PHP errors into JSON
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../includes/functions.php';
@@ -98,6 +95,8 @@ try {
   $selectFields = ['u.id'];
   if (!empty($availableCols['email']))
     $selectFields[] = 'u.email';
+  if (!empty($availableCols['name']))
+    $selectFields[] = 'u.name';
   if (!empty($availableCols['first_name']))
     $selectFields[] = 'u.first_name';
   if (!empty($availableCols['last_name']))
@@ -115,9 +114,13 @@ try {
   if (!empty($availableCols['is_admin']))
     $selectFields[] = 'u.is_admin';
 
+  // wallet_balance (only if column exists)
+  if (!empty($availableCols['wallet_balance']))
+    $selectFields[] = 'u.wallet_balance';
+
   // always include aggregates
   $selectFields[] = '(SELECT COUNT(*) FROM domains d WHERE d.user_id = u.id) as domain_count';
-  $selectFields[] = '(SELECT IFNULL(SUM(total),0) FROM orders o WHERE o.user_id = u.id) as total_spent';
+  $selectFields[] = '(SELECT IFNULL(SUM(COALESCE(total_amount,total,0)),0) FROM orders o WHERE o.user_id = u.id) as total_spent';
 
   $sql = "SELECT " . implode(', ', $selectFields) . " FROM users u " . $whereSql . " ORDER BY " . $orderBy . " LIMIT " . intval($per) . " OFFSET " . intval($offset);
 

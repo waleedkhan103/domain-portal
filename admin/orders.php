@@ -12,12 +12,12 @@ if (!$conn) {
 
 $res = false;
 // Prepared statement for orders list
-if ($stmt = $conn->prepare("SELECT o.id, COALESCE(o.order_number, o.id) AS order_number, o.user_id, o.total, o.status, o.created_at, u.email FROM orders o LEFT JOIN users u ON u.id = o.user_id ORDER BY o.id DESC")) {
+if ($stmt = $conn->prepare("SELECT o.id, COALESCE(o.order_number, o.id) AS order_number, o.user_id, COALESCE(o.total_amount, o.total, 0) AS total, o.status, o.created_at, u.email FROM orders o LEFT JOIN users u ON u.id = o.user_id ORDER BY o.id DESC")) {
   $stmt->execute();
   $res = $stmt->get_result();
   $stmt->close();
 } else {
-  $sql = "SELECT o.id, COALESCE(o.order_number, o.id) AS order_number, o.user_id, o.total, o.status, o.created_at, u.email FROM orders o LEFT JOIN users u ON u.id = o.user_id ORDER BY o.id DESC";
+  $sql = "SELECT o.id, COALESCE(o.order_number, o.id) AS order_number, o.user_id, COALESCE(o.total_amount, o.total, 0) AS total, o.status, o.created_at, u.email FROM orders o LEFT JOIN users u ON u.id = o.user_id ORDER BY o.id DESC";
   $res = mysqli_query($conn, $sql);
 }
 ?>

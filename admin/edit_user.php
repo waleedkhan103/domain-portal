@@ -13,25 +13,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'])) {
     require_once __DIR__ . '/includes/footer.php';
     exit;
   }
-  $id = (int) $_POST['id'];
-  $email = $_POST['email'];
-  $first = $_POST['first_name'];
-  $last = $_POST['last_name'];
-  $phone = $_POST['phone'];
-  $country = $_POST['country'];
+  $id      = (int) $_POST['id'];
+  $email   = $_POST['email'];
+  $name    = trim($_POST['name'] ?? '');
+  $phone   = $_POST['phone'] ?? '';
+  $country = $_POST['country'] ?? '';
 
   // Prepared update
-  if ($stmt = $conn->prepare("UPDATE users SET email = ?, first_name = ?, last_name = ?, phone = ?, country = ? WHERE id = ?")) {
-    $stmt->bind_param('sssssi', $email, $first, $last, $phone, $country, $id);
+  if ($stmt = $conn->prepare("UPDATE users SET email = ?, name = ?, phone = ?, country = ? WHERE id = ?")) {
+    $stmt->bind_param('ssssi', $email, $name, $phone, $country, $id);
     $stmt->execute();
     $stmt->close();
   } else {
-    $emailE = mysqli_real_escape_string($conn, $email);
-    $firstE = mysqli_real_escape_string($conn, $first);
-    $lastE = mysqli_real_escape_string($conn, $last);
-    $phoneE = mysqli_real_escape_string($conn, $phone);
+    $emailE   = mysqli_real_escape_string($conn, $email);
+    $nameE    = mysqli_real_escape_string($conn, $name);
+    $phoneE   = mysqli_real_escape_string($conn, $phone);
     $countryE = mysqli_real_escape_string($conn, $country);
-    $sql = "UPDATE users SET email='$emailE', first_name='$firstE', last_name='$lastE', phone='$phoneE', country='$countryE' WHERE id=$id";
+    $sql = "UPDATE users SET email='$emailE', name='$nameE', phone='$phoneE', country='$countryE' WHERE id=$id";
     mysqli_query($conn, $sql);
   }
   header('Location: view_user.php?id=' . $id);
@@ -57,11 +55,9 @@ if (!$user) {
   <?php echo getCSRFField(); ?>
   <input type="hidden" name="id" value="<?php echo $user['id']; ?>">
   <label>Email<br><input name="email" value="<?php echo htmlspecialchars($user['email']); ?>" required></label><br>
-  <label>First name<br><input name="first_name"
-      value="<?php echo htmlspecialchars($user['first_name']); ?>"></label><br>
-  <label>Last name<br><input name="last_name" value="<?php echo htmlspecialchars($user['last_name']); ?>"></label><br>
-  <label>Phone<br><input name="phone" value="<?php echo htmlspecialchars($user['phone']); ?>"></label><br>
-  <label>Country<br><input name="country" value="<?php echo htmlspecialchars($user['country']); ?>"></label><br>
+  <label>Name<br><input name="name" value="<?php echo htmlspecialchars($user['name'] ?? ''); ?>"></label><br>
+  <label>Phone<br><input name="phone" value="<?php echo htmlspecialchars($user['phone'] ?? ''); ?>"></label><br>
+  <label>Country<br><input name="country" value="<?php echo htmlspecialchars($user['country'] ?? ''); ?>"></label><br>
   <button type="submit">Save</button>
 </form>
 <p><a href="view_user.php?id=<?php echo $user['id']; ?>">Cancel</a></p>

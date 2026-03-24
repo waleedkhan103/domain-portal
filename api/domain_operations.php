@@ -180,6 +180,62 @@ switch ($action) {
     }
     break;
 
+  case 'auto_renew':
+    $domainId = (int) ($_POST['domain_id'] ?? 0);
+    $autoRenew = (int) ($_POST['auto_renew'] ?? 0);
+
+    // Verify domain ownership
+    $sql = "SELECT * FROM domains WHERE id = $domainId AND user_id = $userId";
+    $result = mysqli_query($conn, $sql);
+
+    if (mysqli_num_rows($result) === 0) {
+      jsonResponse(false, 'Domain not found');
+    }
+
+    // Update auto_renew setting
+    $sql = "UPDATE domains SET auto_renew = $autoRenew WHERE id = $domainId";
+    if (mysqli_query($conn, $sql)) {
+      logActivity($userId, $domainId, 'auto_renew_' . ($autoRenew ? 'enabled' : 'disabled'), 'Auto-renewal ' . ($autoRenew ? 'enabled' : 'disabled'));
+      jsonResponse(true, 'Auto-renewal setting updated');
+    } else {
+      jsonResponse(false, 'Failed to update setting');
+    }
+    break;
+
+  case 'toggle_privacy':
+    $domainId = (int) ($_POST['domain_id'] ?? 0);
+
+    // Verify domain ownership
+    $sql = "SELECT * FROM domains WHERE id = $domainId AND user_id = $userId";
+    $result = mysqli_query($conn, $sql);
+
+    if (mysqli_num_rows($result) === 0) {
+      jsonResponse(false, 'Domain not found');
+    }
+
+    $domain = mysqli_fetch_assoc($result);
+    $newPrivacyState = !$domain['privacy_enabled'];
+    $privacyFee = $newPrivacyState ? 2.99 : 0.00;
+
+    // Update privacy setting in database
+    $sql = "UPDATE domains SET privacy_enabled = " . ($newPrivacyState ? 1 : 0) . ",
+            privacy_fee = $privacyFee
+            WHERE id = $domainId";
+
+    if (mysqli_query($conn, $sql)) {
+      $action = $newPrivacyState ? 'enabled' : 'disabled';
+      logActivity($userId, $domainId, 'privacy_' . $action, 'WHOIS privacy protection ' . $action);
+
+      $message = $newPrivacyState
+        ? 'Privacy protection enabled. Your contact information is now hidden from WHOIS lookups.'
+        : 'Privacy protection disabled. Your contact information is now visible in WHOIS lookups.';
+
+      jsonResponse(true, $message, ['privacy_enabled' => $newPrivacyState, 'privacy_fee' => $privacyFee]);
+    } else {
+      jsonResponse(false, 'Failed to update privacy setting');
+    }
+    break;
+
   default:
     jsonResponse(false, 'Invalid action');
 }

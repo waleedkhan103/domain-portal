@@ -19,7 +19,7 @@ if (!$id) {
 }
 
 $order = null;
-if ($stmt = $conn->prepare("SELECT o.id, o.order_number, o.user_id, o.total, o.status, o.created_at, o.payment_method, u.first_name, u.last_name, u.email FROM orders o LEFT JOIN users u ON u.id = o.user_id WHERE o.id = ? LIMIT 1")) {
+if ($stmt = $conn->prepare("SELECT o.id, o.order_number, o.user_id, COALESCE(o.total_amount, o.total, 0) AS total, o.status, o.created_at, COALESCE(u.name, CONCAT_WS(' ', u.first_name, u.last_name), u.email) AS customer_name, u.email FROM orders o LEFT JOIN users u ON u.id = o.user_id WHERE o.id = ? LIMIT 1")) {
   $stmt->bind_param('i', $id);
   $stmt->execute();
   $res = $stmt->get_result();
@@ -27,7 +27,7 @@ if ($stmt = $conn->prepare("SELECT o.id, o.order_number, o.user_id, o.total, o.s
     $order = $res->fetch_assoc();
   $stmt->close();
 } else {
-  $res = mysqli_query($conn, "SELECT o.id, o.order_number, o.user_id, o.total, o.status, o.created_at, o.payment_method, u.first_name, u.last_name, u.email FROM orders o LEFT JOIN users u ON u.id = o.user_id WHERE o.id = $id LIMIT 1");
+  $res = mysqli_query($conn, "SELECT o.id, o.order_number, o.user_id, COALESCE(o.total_amount, o.total, 0) AS total, o.status, o.created_at, COALESCE(u.name, u.email) AS customer_name, u.email FROM orders o LEFT JOIN users u ON u.id = o.user_id WHERE o.id = $id LIMIT 1");
   $order = $res ? mysqli_fetch_assoc($res) : null;
 }
 
@@ -65,13 +65,13 @@ if ($stmt2 = $conn->prepare("SELECT id, domain_name, operation_type, period, pri
       </li>
       <li class="list-group-item"><strong>Total:</strong> <?php echo htmlspecialchars($order['total']); ?></li>
       <li class="list-group-item"><strong>Payment:</strong>
-        <?php echo htmlspecialchars($order['payment_method'] ?? ''); ?></li>
+        <?php echo htmlspecialchars($order['payment_method'] ?? $order['payment_gateway'] ?? 'N/A'); ?></li>
     </ul>
 
     <h5>Customer</h5>
     <ul class="list-group mb-3">
       <li class="list-group-item"><strong>Name:</strong>
-        <?php echo htmlspecialchars($order['first_name'] . ' ' . $order['last_name']); ?></li>
+        <?php echo htmlspecialchars($order['customer_name'] ?? ''); ?></li>
       <li class="list-group-item"><strong>Email:</strong> <?php echo htmlspecialchars($order['email']); ?></li>
       <li class="list-group-item"><strong>User:</strong> <a
           href="view_user.php?id=<?php echo (int) $order['user_id']; ?>">#<?php echo (int) $order['user_id']; ?></a></li>
@@ -113,7 +113,7 @@ if ($stmt2 = $conn->prepare("SELECT id, domain_name, operation_type, period, pri
     <h5>Actions</h5>
     <div id="order-actions">
       <?php if ($order['status'] === 'pending'): ?>
-        <button id="approve-order-btn" class="btn btn-sm btn-success mb-2">Approve Order</button>
+        <button id="approve-order-btn" class="btn btn-sm btn-success mb-2" data-order-id="<?php echo $order['id']; ?>">Approve Order</button>
         <button id="reject-order-btn" class="btn btn-sm btn-danger mb-2">Reject Order</button>
       <?php endif; ?>
       <div class="mb-2">

@@ -7,23 +7,47 @@ document.addEventListener("DOMContentLoaded", function () {
   const saveBtn = document.getElementById("save-settings-btn");
   const saveSpinner = document.getElementById("save-spinner");
   const alertBox = document.getElementById("settings-alert");
-  const csrfToken = document.getElementById("csrf-token").value;
+  let csrfToken = document.getElementById("csrf-token").value;
   const settingsTabs = document.getElementById("settings-tabs");
 
-  let settingsData = {};
-
-  // Initialize tabs - handle tab switching
+  // Initialize tabs - Bootstrap native + manual fallback
+  console.log("Initializing tabs...");
   if (settingsTabs) {
-    const tabButtons = settingsTabs.querySelectorAll('[role="tab"]');
-    tabButtons.forEach((btn) => {
-      btn.addEventListener("shown.bs.tab", function (e) {
-        // Update aria-selected attributes
-        tabButtons.forEach((b) => {
-          b.setAttribute("aria-selected", b === this);
+    const tabButtons = settingsTabs.querySelectorAll(
+      'button[data-bs-toggle="tab"]',
+    );
+    console.log("Found tab buttons:", tabButtons.length);
+
+    tabButtons.forEach((button) => {
+      button.addEventListener("click", function (e) {
+        console.log("Tab clicked:", this.id);
+
+        // Remove active from all tabs
+        tabButtons.forEach((btn) => {
+          btn.classList.remove("active");
+          btn.setAttribute("aria-selected", "false");
         });
-        console.log("Tab switched to:", this.getAttribute("aria-controls"));
+
+        // Hide all tab panes
+        document.querySelectorAll(".tab-pane").forEach((pane) => {
+          pane.classList.remove("show", "active");
+        });
+
+        // Activate clicked tab
+        this.classList.add("active");
+        this.setAttribute("aria-selected", "true");
+
+        // Show corresponding tab pane
+        const targetId = this.getAttribute("data-bs-target");
+        const targetPane = document.querySelector(targetId);
+        if (targetPane) {
+          targetPane.classList.add("show", "active");
+          console.log("Activated tab pane:", targetId);
+        }
       });
     });
+  } else {
+    console.error("Settings tabs element not found!");
   }
 
   // Load settings on page load
@@ -104,6 +128,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const data = await res.json();
 
       if (data.success) {
+        if (data.csrf_token) csrfToken = data.csrf_token;
         showAlert(data.message || "Settings saved successfully", "success");
         // Reload settings to show saved state
         await loadSettings();

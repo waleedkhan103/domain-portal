@@ -4,6 +4,9 @@ define('DB_HOST', 'localhost');
 define('DB_USER', 'allrounder');
 define('DB_PASS', '7ujm&5tgb%');
 define('DB_NAME', 'domain_portal');
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ini_set('error_reporting', 1);
 // Disable throwing mysqli exceptions during connect
 mysqli_report(MYSQLI_REPORT_OFF);
 // Create database connection
