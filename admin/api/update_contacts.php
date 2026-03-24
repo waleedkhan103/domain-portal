@@ -1,5 +1,6 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) session_start();
+ini_set('display_errors', '0');
 header('Content-Type: application/json; charset=utf-8');
 
 require_once __DIR__ . '/../includes/auth.php';
@@ -71,7 +72,7 @@ if ($apiResult['success']) {
   // optionally persist to local DB if schema exists; here we only log
   $adminId = $_SESSION['admin_id'] ?? 0;
   logActivity($adminId, $domainId, 'contacts_updated', 'Admin updated contacts');
-  jsonResponse(true, 'Contacts updated successfully');
+  jsonResponse(true, 'Contacts updated successfully', ['csrf_token' => generateCSRFToken()]);
 }
 
 jsonResponse(false, $apiResult['message'] ?? 'Failed to update contacts');

@@ -46,12 +46,33 @@ switch ($action) {
     $domain = clean($_POST['domain_name'] ?? clean($_POST['domain'] ?? ''));
     $operationType = clean($_POST['operation_type'] ?? 'register');
     $period = (int) ($_POST['period'] ?? 1);
-    $price = (float) ($_POST['price'] ?? 12.99);
     $isPremium = (int) ($_POST['is_premium'] ?? 0);
     $authCode = clean($_POST['auth_code'] ?? '');
 
     if (empty($domain)) {
       jsonResponse(false, 'Domain name is required');
+    }
+
+    // Get TLD-specific pricing from database
+    $pricing = getTldPricing($domain);
+
+    // Use provided price or TLD-specific price based on operation type
+    $price = (float) ($_POST['price'] ?? 0);
+    if ($price <= 0) {
+      // Auto-determine price based on operation type
+      switch ($operationType) {
+        case 'register':
+          $price = $pricing['registration_price'];
+          break;
+        case 'renew':
+          $price = $pricing['renewal_price'];
+          break;
+        case 'transfer':
+          $price = $pricing['transfer_price'];
+          break;
+        default:
+          $price = $pricing['registration_price'];
+      }
     }
 
     if ($isGuest) {

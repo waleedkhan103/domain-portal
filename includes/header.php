@@ -68,6 +68,11 @@ $cartCount = $currentUser
               <a class="nav-link" href="<?php echo pageUrl('my_domains.php'); ?>">My Domains</a>
             </li>
             <li class="nav-item">
+              <a class="nav-link" href="<?php echo pageUrl('transfer_domain.php'); ?>">
+                <i class="bi bi-arrow-left-right"></i> Transfer Domain
+              </a>
+            </li>
+            <li class="nav-item">
               <a class="nav-link" href="<?php echo pageUrl('watchlist.php'); ?>">Watchlist</a>
             </li>
             <li class="nav-item">

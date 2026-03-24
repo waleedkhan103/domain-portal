@@ -12,6 +12,15 @@ if (!$conn) {
   exit;
 }
 
+// detect available columns to avoid referencing missing fields
+$availableCols = [];
+$colsRes = mysqli_query($conn, "SHOW COLUMNS FROM users");
+if ($colsRes) {
+  while ($col = mysqli_fetch_assoc($colsRes)) {
+    $availableCols[$col['Field']] = true;
+  }
+}
+
 $q = trim($_GET['q'] ?? '');
 $role = $_GET['role'] ?? 'all';
 $status = $_GET['status'] ?? 'all';
@@ -53,16 +62,49 @@ if ($dateTo) {
 
 $whereSql = count($where) ? 'WHERE ' . implode(' AND ', $where) : '';
 
-$sql = "SELECT u.id, u.email, u.first_name, u.last_name, u.username, u.phone, u.country, u.created_at, u.status, u.is_admin,
-          (SELECT COUNT(*) FROM domains d WHERE d.user_id = u.id) as domain_count,
-          (SELECT IFNULL(SUM(total),0) FROM orders o WHERE o.user_id = u.id) as total_spent
-        FROM users u $whereSql ORDER BY u.id DESC";
+// Build select fields based on available columns
+$selectFields = ['u.id'];
+if (!empty($availableCols['email']))
+  $selectFields[] = 'u.email';
+if (!empty($availableCols['first_name']))
+  $selectFields[] = 'u.first_name';
+if (!empty($availableCols['last_name']))
+  $selectFields[] = 'u.last_name';
+if (!empty($availableCols['username']))
+  $selectFields[] = 'u.username';
+if (!empty($availableCols['phone']))
+  $selectFields[] = 'u.phone';
+if (!empty($availableCols['country']))
+  $selectFields[] = 'u.country';
+if (!empty($availableCols['created_at']))
+  $selectFields[] = 'u.created_at';
+if (!empty($availableCols['status']))
+  $selectFields[] = 'u.status';
+if (!empty($availableCols['is_admin']))
+  $selectFields[] = 'u.is_admin';
+
+$selectFields[] = '(SELECT COUNT(*) FROM domains d WHERE d.user_id = u.id) as domain_count';
+$selectFields[] = '(SELECT IFNULL(SUM(total),0) FROM orders o WHERE o.user_id = u.id) as total_spent';
+
+$sql = "SELECT " . implode(', ', $selectFields) . " FROM users u $whereSql ORDER BY u.id DESC";
 
 header('Content-Type: text/csv');
 header('Content-Disposition: attachment; filename="users_export_' . date('Ymd_His') . '.csv"');
 
 $out = fopen('php://output', 'w');
-fputcsv($out, ['id', 'email', 'first_name', 'last_name', 'username', 'phone', 'country', 'created_at', 'status', 'is_admin', 'domain_count', 'total_spent']);
+// build CSV header to match select fields
+$csvHeader = [];
+foreach ($selectFields as $f) {
+  // strip table aliases and AS
+  $label = preg_replace('/^.*\.(.*)$/', '$1', $f);
+  $label = preg_replace('/\s+as\s+/i', ' as ', $label);
+  if (stripos($label, ' as ') !== false) {
+    $parts = preg_split('/\s+as\s+/i', $label);
+    $label = trim($parts[1]);
+  }
+  $csvHeader[] = $label;
+}
+fputcsv($out, $csvHeader);
 
 if ($stmt = $conn->prepare($sql)) {
   if ($types)

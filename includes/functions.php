@@ -116,7 +116,7 @@ function getCartCount($userId)
 // Validate domain name
 function isValidDomain($domain)
 {
-  return preg_match('/^(?!-)[A-Za-z0-9-]+([-.]{1}[a-z0-9]+)*\.[A-Za-z]{2,}$/', $domain);
+  return preg_match('/^(?!-)[A-Za-z0-9-]+([-.][A-Za-z0-9]+)*\.[A-Za-z]{2,}$/i', $domain);
 }
 
 // Extract domain and TLD
@@ -129,6 +129,47 @@ function parseDomain($domain)
     return ['name' => $name, 'tld' => $tld, 'full' => $domain];
   }
   return null;
+}
+
+// Get TLD-specific pricing from database
+function getTldPricing($domain)
+{
+  global $conn;
+
+  // Extract TLD from domain
+  $parsed = parseDomain($domain);
+  if (!$parsed) {
+    // Default pricing if domain can't be parsed
+    return [
+      'registration_price' => 12.99,
+      'renewal_price' => 12.99,
+      'transfer_price' => 0.00,
+      'privacy_price' => 2.99
+    ];
+  }
+
+  $tld = $parsed['tld'];
+  $tldEsc = mysqli_real_escape_string($conn, $tld);
+
+  // Query tld_pricing table
+  $sql = "SELECT registration_price, renewal_price, transfer_price, privacy_price
+          FROM tld_pricing
+          WHERE tld = '$tldEsc' AND active = 1
+          LIMIT 1";
+
+  $result = mysqli_query($conn, $sql);
+
+  if ($result && mysqli_num_rows($result) > 0) {
+    return mysqli_fetch_assoc($result);
+  }
+
+  // Fallback to default pricing if TLD not found
+  return [
+    'registration_price' => 12.99,
+    'renewal_price' => 12.99,
+    'transfer_price' => 0.00,
+    'privacy_price' => 2.99
+  ];
 }
 
 // Format price

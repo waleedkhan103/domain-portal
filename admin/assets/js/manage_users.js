@@ -75,8 +75,9 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     for (const u of data.rows) {
       const tr = document.createElement("tr");
+      const displayName = u.name || ((u.first_name || "") + " " + (u.last_name || "")).trim() || "—";
       tr.innerHTML = `<td><input class="sel-user" data-id="${u.id}" type="checkbox"></td>
-        <td>${escapeHtml(u.first_name || "")} ${escapeHtml(u.last_name || "")} ${u.is_admin ? '<span class="badge bg-info ms-1">ADMIN</span>' : ""}</td>
+        <td>${escapeHtml(displayName)} ${u.is_admin ? '<span class="badge bg-info ms-1">ADMIN</span>' : ""}</td>
         <td>${escapeHtml(u.email)}${u.username ? '<div class="small text-muted">' + escapeHtml(u.username) + "</div>" : ""}</td>
         <td>${u.domain_count || 0}</td>
         <td>${formatMoney(u.total_spent || 0)}</td>
@@ -143,7 +144,8 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
       const u = j.data.user;
-      let out = `<h5>${escapeHtml(u.first_name || "")} ${escapeHtml(u.last_name || "")}</h5><p>${escapeHtml(u.email)}</p><p>Registered: ${escapeHtml(u.created_at || "")}</p>`;
+      const uName = u.name || ((u.first_name || "") + " " + (u.last_name || "")).trim() || u.email;
+      let out = `<h5>${escapeHtml(uName)}</h5><p>${escapeHtml(u.email)}</p><p>Registered: ${escapeHtml(u.created_at || "")}</p>`;
       out += "<h6>Domains</h6><ul>";
       for (const d of j.data.domains)
         out += `<li>${escapeHtml(d.domain_name)} <span class="text-muted small">${escapeHtml(d.status)}</span></li>`;
@@ -177,7 +179,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const u = j.data.user;
             document.getElementById("edit-user-id").value = u.id;
             document.getElementById("edit-name").value =
-              (u.first_name || "") + " " + (u.last_name || "");
+              u.name || ((u.first_name || "") + " " + (u.last_name || "")).trim();
             document.getElementById("edit-email").value = u.email;
             document.getElementById("edit-username").value = u.username || "";
             document.getElementById("edit-is-admin").checked = !!u.is_admin;

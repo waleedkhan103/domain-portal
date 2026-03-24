@@ -1,0 +1,33 @@
+# Environment & credentials
+.env
+*.env
+
+# IDE & OS
+.claude/
+.vscode/
+.idea/
+*.swp
+*.swo
+Thumbs.db
+.DS_Store
+
+# Test & debug files
+test_*.php
+debug*.php
+check_*.php
+*_tester.html
+mock_output.json
+test_*.txt
+
+# Migration runners (contain DB operations)
+run_*_migration.php
+
+# Invoices (generated)
+invoices/
+
+# Composer
+vendor/
+composer.lock
+
+# Logs
+*.log

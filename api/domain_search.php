@@ -100,11 +100,31 @@ if ($action === 'check') {
 
   $data = $result['data'] ?? [];
 
+  // Get TLD-specific pricing from database
+  $pricing = getTldPricing($domain);
+
+  // Use API prices if available, otherwise use our TLD pricing
+  $apiPrices = $data['Prices'] ?? [];
+  $finalPrices = [];
+
+  if (!empty($apiPrices)) {
+    $finalPrices = $apiPrices;
+  } else {
+    $finalPrices[] = [
+      'price' => number_format($pricing['registration_price'], 2),
+      'type' => 'registration',
+      'period' => 1
+    ];
+  }
+
   jsonResponse(true, 'Success', [
     'domain' => $data['domain'] ?? $domain,
     'available' => ($data['avail'] ?? 0) == 1,
     'premium' => ($data['Premium'] ?? 'false') === 'true',
-    'prices' => $data['Prices'] ?? []
+    'prices' => $finalPrices,
+    'registration_price' => $pricing['registration_price'],
+    'renewal_price' => $pricing['renewal_price'],
+    'privacy_price' => $pricing['privacy_price']
   ]);
 }
 
@@ -130,10 +150,16 @@ if ($action === 'check_multiple') {
 
     if ($result['success']) {
       $data = $result['data'] ?? [];
+
+      // Get TLD-specific pricing
+      $pricing = getTldPricing($domain);
+      $price = $data['Prices'][0]['price'] ?? $pricing['registration_price'];
+
       $results[] = [
         'domain' => $domain,
         'available' => ($data['avail'] ?? 0) == 1,
-        'price' => $data['Prices'][0]['price'] ?? '12.99'
+        'price' => number_format($price, 2),
+        'renewal_price' => number_format($pricing['renewal_price'], 2)
       ];
     }
   }

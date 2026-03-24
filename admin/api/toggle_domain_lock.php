@@ -1,5 +1,6 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) session_start();
+ini_set('display_errors', '0');
 header('Content-Type: application/json; charset=utf-8');
 
 require_once __DIR__ . '/../includes/auth.php';
@@ -50,7 +51,7 @@ if ($apiResult['success']) {
   }
   $adminId = $_SESSION['admin_id'] ?? 0;
   logActivity($adminId, $domainId, $newState ? 'domain_locked' : 'domain_unlocked', $newState ? 'Domain locked by admin' : 'Domain unlocked by admin');
-  jsonResponse(true, 'Domain lock status updated', ['is_locked' => $newState]);
+  jsonResponse(true, 'Domain lock status updated', ['is_locked' => $newState, 'csrf_token' => generateCSRFToken()]);
 }
 
 jsonResponse(false, $apiResult['message'] ?? 'Failed to update lock status');

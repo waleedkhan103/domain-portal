@@ -1,5 +1,6 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) session_start();
+ini_set('display_errors', '0');
 header('Content-Type: application/json; charset=utf-8');
 
 require_once __DIR__ . '/../includes/auth.php';
@@ -28,7 +29,7 @@ if ($period <= 0)
 
 // fetch domain
 $domain = null;
-if ($stmt = $conn->prepare("SELECT id, domain_name, expiry_date, expires_at FROM domains WHERE id = ? LIMIT 1")) {
+if ($stmt = $conn->prepare("SELECT id, domain_name, user_id, COALESCE(expiry_date, expires_at) AS expiry_date FROM domains WHERE id = ? LIMIT 1")) {
   $stmt->bind_param('i', $domainId);
   $stmt->execute();
   $res = $stmt->get_result();
@@ -56,7 +57,7 @@ if ($apiResult['success']) {
   $orderNumber = generateOrderNumber();
   $amount = $apiResult['data']['amount'] ?? 0;
   $adminId = $_SESSION['admin_id'] ?? 0;
-  if ($stmt2 = $conn->prepare("INSERT INTO orders (order_number, user_id, total, status, created_at) VALUES (?, ?, ?, ?, NOW())")) {
+  if ($stmt2 = $conn->prepare("INSERT INTO orders (order_number, user_id, total_amount, status, created_at) VALUES (?, ?, ?, ?, NOW())")) {
     $userId = (int) ($domain['user_id'] ?? 0);
     $status = 'completed';
     $stmt2->bind_param('sids', $orderNumber, $userId, $amount, $status);
@@ -65,14 +66,14 @@ if ($apiResult['success']) {
     $stmt2->close();
   } else {
     $userId = (int) ($domain['user_id'] ?? 0);
-    mysqli_query($conn, "INSERT INTO orders (order_number, user_id, total, status, created_at) VALUES ('" . mysqli_real_escape_string($conn, $orderNumber) . "', $userId, $amount, 'completed', NOW())");
+    mysqli_query($conn, "INSERT INTO orders (order_number, user_id, total_amount, status, created_at) VALUES ('" . mysqli_real_escape_string($conn, $orderNumber) . "', $userId, $amount, 'completed', NOW())");
     $orderId = mysqli_insert_id($conn);
   }
 
   // log renewal
   logActivity($adminId, $domainId, 'domain_renewed', "Domain renewed for {$period} year(s)");
 
-  jsonResponse(true, 'Domain renewed successfully', ['new_expiry_date' => $newExpiryDate, 'order_id' => $orderId]);
+  jsonResponse(true, 'Domain renewed successfully', ['new_expiry_date' => $newExpiryDate, 'order_id' => $orderId, 'csrf_token' => generateCSRFToken()]);
 }
 
 jsonResponse(false, $apiResult['message'] ?? 'Failed to renew domain');
